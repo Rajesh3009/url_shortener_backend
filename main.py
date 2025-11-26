@@ -100,5 +100,15 @@ def redirect_url(short_code: str, db: Session = Depends(get_db)):
     
     return {"original_url": db_url.original_url, "clicks": db_url.clicks,"created_at": db_url.created_at}
 
+@app.get("/urls", response_model=list[schemas.URL])
+def read_urls(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    urls = db.query(models.URL).offset(skip).limit(limit).all()
+    return urls
+
+@app.get("/users", response_model=list[schemas.User])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = db.query(models.User).offset(skip).limit(limit).all()
+    return users
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

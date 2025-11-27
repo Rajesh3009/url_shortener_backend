@@ -6,12 +6,19 @@ import uvicorn
 import string
 import random
 from jose import JWTError, jwt
-
+from fastapi.middleware.cors import CORSMiddleware
 from app import models, database, schemas, auth
 
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Dependency
 def get_db():

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -107,20 +108,37 @@ def redirect_url(short_code: str, db: Session = Depends(get_db)):
     
     return {"original_url": db_url.original_url, "clicks": db_url.clicks,"created_at": db_url.created_at}
 
+
+
 @app.get("/urls", response_model=list[schemas.URL])
 def read_urls(skip: int = 0, limit: int = 100, current_user: schemas.User = Depends(get_current_user), db: Session = Depends(get_db)):
     urls = db.query(models.URL).filter(models.URL.user_id == current_user.id).offset(skip).limit(limit).all()
     return urls
 
-@app.get("/users", response_model=list[schemas.User])
+@app.get("/dev/users", response_model=list[schemas.User])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = db.query(models.User).offset(skip).limit(limit).all()
     return users
 
-@app.get("/prod/urls", response_model=list[schemas.URL])
+@app.get("/dev/urls", response_model=list[schemas.URL])
 def read_prod_urls(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     urls = db.query(models.URL).offset(skip).limit(limit).all()
     return urls
+
+@app.get("/{short_code}")
+async def redirect_to_url(short_code: str, db: Session = Depends(get_db)):
+    # Find the URL in the database
+    url_entry = db.query(models.URL).filter(models.URL.short_code == short_code).first()
+    
+    if not url_entry:
+        raise HTTPException(status_code=404, detail="URL not found")
+    
+    # Increment click count (optional but recommended)
+    url_entry.clicks += 1
+    db.commit()
+    
+    # Redirect to the original URL
+    return RedirectResponse(url=url_entry.original_url)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

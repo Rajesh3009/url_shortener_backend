@@ -26,6 +26,7 @@ class URL(BaseModel):
     short_code: str
     clicks: int
     created_at: datetime | None = None
+    user_id: int
 
     class Config:
         from_attributes = True

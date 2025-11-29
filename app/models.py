@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String,DateTime
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy import func
+from sqlalchemy.orm import relationship
 from .database import Base
 
 class URL(Base):
@@ -10,6 +11,10 @@ class URL(Base):
     short_code = Column(String, unique=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     clicks = Column(Integer, default=0)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
+    # Relationship
+    owner = relationship("User", back_populates="urls")
 
 class User(Base):
     __tablename__ = "users"
@@ -17,3 +22,6 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    
+    # Relationship
+    urls = relationship("URL", back_populates="owner")
